@@ -98,7 +98,7 @@ export const logout = async (req,res) =>{
     }
 }
 
-export const otpVerification = async (req, res) =>{
+export const sendOtpVerification = async (req, res) =>{
     try {
         const {userId} = req.body;
         const user = await userModel.findById(userId);
@@ -116,13 +116,46 @@ export const otpVerification = async (req, res) =>{
             from: process.env.SENDER_EMAIL,
             to: user.email,
             subject: "Account Verification OTP",
-            text: ``,
+            text: `Welcome ${user.name},\n\nYour OTP for account verification is ${otp}. It is valid for 5 minutes.\n\nBest regards,\nThe Team`,
         } 
         await transporter.sendMail(mail);
+
+          return res.json({success:true, message:"OTP sent to your email", userId: user._id})
 
 
     } catch (error) {
         return res.json({success:false, message:error.message});
         
+    }
+}
+
+export const verifyEmail = async(req,res)=>{
+    const {userId, otp} = req.body;
+
+    if(!userId || !otp){
+        return res.json({success:false, message:"User ID and OTP are required"});
+    }
+
+    try {
+        const user = await userModel.findById(userId);
+        if(!user){
+            return res.json({success:false, message:"User not found"});
+        }
+        if(user.verifyOtp === "" || user.verifyOtp!==opt){
+            return res.json({success:false, message:"Invalid OTP"});
+        }
+
+        if(user.verifyOtpExpiry < Date.now()){
+            return res.json({success:false, message:"OTP expired"});
+        }
+
+        user.isVerified = true;
+        user.verifyOtp = "";
+        user.verifyOtpExpiry = 0;
+        await user.save();
+        return res.json({success:true, message:"Email verified successfully"});
+
+    } catch (error) {
+        return res.json({success:false, message:error.message});
     }
 }
