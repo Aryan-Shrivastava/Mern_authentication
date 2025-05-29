@@ -1,7 +1,7 @@
 import bycrypt, { hash } from 'bcryptjs';
 import JWT from 'jsonwebtoken';
 import userModel from '../Models/userModel.js';
-// import transporter from '../config/nodemailer.js';
+import transporter from '../config/nodemailer.js';
 
 export const register = async (req,res) =>{
     const {name, email, password} = req.body;
@@ -33,13 +33,13 @@ export const register = async (req,res) =>{
         // Not working as of now, will fix later
 
         // Sending the emails
-        // const mail = {
-        //     from: process.env.SENDER_EMAIL,
-        //     to: email,
-        //     subject: "Welcome to Aryan's MERN Auth",
-        //     text: `Hello ${name},\n\nWelcome to Aryan's MERN Auth! Your registered email id is ${email}. We're excited to have you on board.\n\nBest regards,\nThe Team`,
-        // } 
-        // await transporter.sendMail(mail);
+        const mail = {
+            from: process.env.SENDER_EMAIL,
+            to: email,
+            subject: "Welcome to Aryan's MERN Auth",
+            text: `Hello ${name},\n\nWelcome to Aryan's MERN Auth! Your registered email id is ${email}. We're excited to have you on board.\n\nBest regards,\nThe Team`,
+        } 
+        await transporter.sendMail(mail);
         
         return res.json({success:true, message:"User registered successfully"});
 
@@ -95,5 +95,34 @@ export const logout = async (req,res) =>{
         return res.json({success:true, message:"User logged out successfully"});
     } catch(error){
         return res.json({success:false, message:error.message});
+    }
+}
+
+export const otpVerification = async (req, res) =>{
+    try {
+        const {userId} = req.body;
+        const user = await userModel.findById(userId);
+
+        if(user.isVerified){
+            return res,json({success:false, message:"User already verified"});
+        }
+
+        const otp = String(Math.floor(Math.random()*900000+100000));
+        user.verifyOtp = opt;
+        user.verifyOtpExpiry = Date.now() + 5*60*1000; 
+        await user.save();
+        
+        const mail = {
+            from: process.env.SENDER_EMAIL,
+            to: user.email,
+            subject: "Account Verification OTP",
+            text: ``,
+        } 
+        await transporter.sendMail(mail);
+
+
+    } catch (error) {
+        return res.json({success:false, message:error.message});
+        
     }
 }
