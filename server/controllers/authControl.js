@@ -1,6 +1,7 @@
 import bycrypt, { hash } from 'bcryptjs';
 import JWT from 'jsonwebtoken';
 import userModel from '../Models/userModel.js';
+// import transporter from '../config/nodemailer.js';
 
 export const register = async (req,res) =>{
     const {name, email, password} = req.body;
@@ -29,6 +30,17 @@ export const register = async (req,res) =>{
             maxAge:7*24*60*60*1000 // 7 days
         });
 
+        // Not working as of now, will fix later
+
+        // Sending the emails
+        // const mail = {
+        //     from: process.env.SENDER_EMAIL,
+        //     to: email,
+        //     subject: "Welcome to Aryan's MERN Auth",
+        //     text: `Hello ${name},\n\nWelcome to Aryan's MERN Auth! Your registered email id is ${email}. We're excited to have you on board.\n\nBest regards,\nThe Team`,
+        // } 
+        // await transporter.sendMail(mail);
+        
         return res.json({success:true, message:"User registered successfully"});
 
     } catch (error) {
